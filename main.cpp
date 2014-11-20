@@ -1,4 +1,5 @@
 #include <SDL/SDL.h>
+#include <cstdint>
 #include <cstdio>
 
 #include "chip8.h"
@@ -18,7 +19,7 @@ int main(int argc, char* argv[]) {
 
 	chip8 emu;
 	emu.init();
-	printf("%d\n",argc);
+
 	if (argc == 2) {
 		emu.loadROM(argv[1]);
 	}
