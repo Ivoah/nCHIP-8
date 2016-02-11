@@ -1,6 +1,6 @@
 #include "chip8.h"
 
-void chip8::init() {
+chip8::chip8(bool dbg) {
 
 	//Seed rng
 	srand(time(NULL));
@@ -9,6 +9,8 @@ void chip8::init() {
 	pc = 0x200;
 	sp = 0;
 	I = 0;
+
+	debug = dbg;
 
 	//Initilise gfx
 	updateScreen = true;
@@ -42,22 +44,22 @@ bool chip8::step() {
 	uint16_t opcode = mem[pc] << 8 | mem[pc + 1];
 
 	//Decode opcode
-	printf("Opcode: 0x%x at address 0x%x, 0x%x in file\n", opcode, pc, pc - 0x200);
+	debug_print("Opcode: 0x%x at address 0x%x, 0x%x in file\n", opcode, pc, pc - 0x200);
 	switch(opcode & 0xF000){
 		case 0x0000:
 			switch(opcode & 0x00FF) {
 				case 0x00E0: //Clears the screen
-					printf("Clearing screen\n");
+					debug_print("Clearing screen\n");
 					for (int y = 0; y < 32; y++)
 						for (int x = 0; x < 64; x++)
 							gfx[x + (y * 64)] = 0;
 					pc += 2;
 					break;
 				case 0x00EE: //Returns from a subroutine
-					printf("pc before return: 0x%x\n",pc);
+					debug_print("pc before return: 0x%x\nsp: before return: 0x%x\n",pc,sp);
 					pc = stack[sp];
-					printf("pc after return: 0x%x\n",pc);
 					sp--;
+					debug_print("pc after return: 0x%x\nsp: after return: 0x%x\n",pc,sp);
 					break;
 			}
 			break;
@@ -65,9 +67,11 @@ bool chip8::step() {
 			pc = opcode & 0x0FFF;
 			break;
 		case 0x2000: //Calls subroutine at NNN
+			debug_print("pc before call: 0x%x\nsp: before call: 0x%x\n",pc,sp);
 			stack[sp] = pc;
 			sp++;
 			pc = opcode & 0x0FFF;
+			debug_print("pc after call: 0x%x\nsp: after call: 0x%x\n",pc,sp);
 			break;
 		case 0x3000:
 			if (V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF))
@@ -171,7 +175,7 @@ bool chip8::step() {
 			uint8_t y = V[(opcode & 0x00F0) >> 4];
 			uint8_t h = opcode & 0x000F;
 			uint8_t pxl;
-			printf("XOR at (%d, %d)\n",x,y);
+			debug_print("XOR at (%d, %d)\n",x,y);
 			for (int _y = 0; _y < h; _y++) {
 				pxl = mem[I + _y];
 				for (int _x = 0; _x < 8; _x++) {
@@ -210,7 +214,7 @@ bool chip8::step() {
 					pc += 2;
 					break;
 				case 0x000A:
-					printf("Unimplemented\n");
+					debug_print("Unimplemented\n");
 					pc += 2;
 					break;
 				case 0x0015:
@@ -258,10 +262,10 @@ void chip8::loadROM(char* ROM_NAME) {
 	FILE* rom = fopen(ROM_NAME, "r");
 	fread(&mem[0x200], 8, 0xFFF - 0x200, rom);
 	fclose(rom);
-	printf("Loaded ROM: %s\n", ROM_NAME);
+	debug_print("Loaded ROM: %s\n", ROM_NAME);
 }
 
-uint8_t chip8::font[80] = { 
+uint8_t chip8::font[80] = {
   0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
   0x20, 0x60, 0x20, 0x20, 0x70, // 1
   0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -279,4 +283,3 @@ uint8_t chip8::font[80] = {
   0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
   0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
-

@@ -17,8 +17,7 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	uint8_t keys[16];
 
-	chip8 emu;
-	emu.init();
+	chip8 emu(true);
 
 	if (argc == 2) {
 		emu.loadROM(argv[1]);
@@ -43,15 +42,16 @@ int main(int argc, char* argv[]) {
 	while (!quit) {
 
 		emu.step();
-		
+
 		if (emu.updateScreen) {
 			SDL_LockSurface(screen);
 			for (int y = 0; y < 32; y++) {
+				//uint32_t *line = (uint32_t*)((char *)screen->pixels + y * screen->pitch);
 				for (int x = 0; x < 64; x++) {
-					if (emu.gfx[(y*32) + x])
-						pixels[(y*32) + x] = 0xFFFFFFFF;
+					if (emu.gfx[(y*64) + x])
+						pixels[(y*64) + x] = 0xFFFFFFFF;
 					else
-						pixels[(y*32) + x] = 0x00000000;
+						pixels[(y*64) + x] = 0x00000000;
 				}
 			}
 			SDL_UnlockSurface(screen);
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 
 		uint8_t *sdl_keys = SDL_GetKeyState(NULL);
 
-		for (int i = 0; i < 16; i++) 
+		for (int i = 0; i < 16; i++)
 			emu.keys[i] = sdl_keys[translate_key(i)];
 
 		while (SDL_PollEvent(&event)) {

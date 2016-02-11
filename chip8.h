@@ -3,6 +3,9 @@
 #include <cstdlib>
 #include <ctime>
 
+#define debug_print(fmt, ...) \
+            if (debug) fprintf(stderr, fmt, ##__VA_ARGS__)
+
 class chip8 {
 private:
 	//RAM
@@ -27,11 +30,12 @@ private:
 public:
 	//Pubilc vars
 	bool updateScreen;
+	bool debug;
 	uint8_t gfx[64 * 32];
 	uint8_t keys[16];
 
 	//Public functions
-	void init();
+	chip8(bool);
 	bool step();
 	void loadROM(char*);
 };
