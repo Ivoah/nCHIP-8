@@ -12,18 +12,24 @@ chip8::chip8(bool dbg) {
 
 	debug = dbg;
 
-	//Initilise gfx
+	//Initialize keys
+	wait_key = -1;
+	for (int i = 0; i < 0xF; i++) {
+		keys[i] = 0;
+	}
+
+	//Initialize gfx
 	updateScreen = true;
 	for (int i = 0; i < 64*32; i++) {
 		gfx[i] = 0;
 	}
 
-	//Initilise memory
+	//Initialize memory
 	for (int i = 0; i < 4096; i++) {
 		mem[0] = 0x0;
 	}
 
-	//Initilise registers
+	//Initialize registers
 	for (int i = 0x0; i < 0xF; i++) {
 		V[i] = 0x0;
 	}
@@ -37,8 +43,8 @@ chip8::chip8(bool dbg) {
 bool chip8::step() {
 
 	//Decrement timers
-	delay_timer--;
-	sound_timer--;
+	delay_timer--; if (delay_timer < 0) delay_timer = 0;
+	sound_timer--; if (sound_timer < 0) sound_timer = 0;
 
 	//Fetch opcode
 	uint16_t opcode = mem[pc] << 8 | mem[pc + 1];
@@ -120,7 +126,7 @@ bool chip8::step() {
 						V[0xF] = 1;
 					else
 						V[0xF] = 0;
-					V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];;
+					V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] + V[(opcode & 0x00F0) >> 4]) % 0xFF;
 					pc += 2;
 					break;
 				case 0x0005: //8XY5: VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't.
@@ -128,7 +134,7 @@ bool chip8::step() {
 						V[0xF] = 1;
 					else
 						V[0xF] = 0;
-					V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
+						V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] - V[(opcode & 0x00F0) >> 4]) % 0xFF;
 					pc += 2;
 					break;
 				case 0x0006: //8XY6: Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift.
@@ -141,7 +147,7 @@ bool chip8::step() {
 						V[0xF] = 1;
 					else
 						V[0xF] = 0;
-					V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
+					V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8]) % 0xFF;
 					pc += 2;
 					break;
 				case 0x000E: //8XYE: Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift.
@@ -168,16 +174,21 @@ bool chip8::step() {
 			V[(opcode & 0x0F00) >> 8] = (rand() % 0xFF) & (opcode & 0x00FF);
 			pc += 2;
 			break;
-		case 0xD000: //DXYN: Sprites stored in memory at location in index register (I), 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels). Sprites are drawn starting at position VX, VY. N is the number of 8bit rows that need to be drawn. If N is greater than 1, second line continues at position VX, VY+1, and so on.
+		case 0xD000: { //DXYN: Sprites stored in memory at location in index register (I), 8bits wide.
+					   //Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero.
+					   //All drawing is XOR drawing (i.e. it toggles the screen pixels). Sprites are drawn starting at position VX, VY.
+					   //N is the number of 8bit rows that need to be drawn.
+					   //If N is greater than 1, second line continues at position VX, VY+1, and so on.
 			uint8_t x = V[(opcode & 0x0F00) >> 8];
 			uint8_t y = V[(opcode & 0x00F0) >> 4];
 			uint8_t h = opcode & 0x000F;
-			uint8_t pxl;
+			uint8_t pxls;
 			debug_print("XOR at (%d, %d)\n",x,y);
+			V[0xF] = 0;
 			for (int _y = 0; _y < h; _y++) {
-				pxl = mem[I + _y];
+				pxls = mem[I + _y];
 				for (int _x = 0; _x < 8; _x++) {
-					if ((pxl & (0x80 >> _x)) != 0) {
+					if ((pxls & (0x80 >> _x)) != 0 && (x+_x>=0 && x+_x<64 && y+_y>=0 && y+_y<32)) {
 						if (gfx[(x + _x + ((y + _y) * 64))] == 1)
 							V[0xF] = 1;
 						gfx[(x + _x + ((y + _y) * 64))] ^= 1;
@@ -188,6 +199,7 @@ bool chip8::step() {
 			updateScreen = true;
 			pc += 2;
 			break;
+		}
 		case 0xE000:
 			switch(opcode & 0x00FF) {
 				case 0x009E: //EX9E: Skips the next instruction if the key stored in VX is pressed.
@@ -211,8 +223,11 @@ bool chip8::step() {
 					pc += 2;
 					break;
 				case 0x000A: //FX0A: A key press is awaited, and then stored in VX.
-					debug_print("Unimplemented\n");
-					pc += 2;
+					if (wait_key >= 0) {
+						V[(opcode & 0x0F00) >> 8] = wait_key;
+						wait_key = -1;
+						pc += 2;
+					}
 					break;
 				case 0x0015: //FX15: Sets the delay timer to VX.
 					delay_timer = V[(opcode & 0x0F00) >> 8];
@@ -253,6 +268,10 @@ bool chip8::step() {
 	}
 
 	return true;
+}
+
+uint8_t chip8::getSound() {
+	return sound_timer;
 }
 
 void chip8::loadROM(char* ROM_NAME) {

@@ -34,9 +34,11 @@ public:
 	bool debug;
 	uint8_t gfx[64 * 32];
 	uint8_t keys[16];
+    int wait_key;
 
 	//Public functions
 	chip8(bool);
 	bool step();
+    uint8_t getSound();
 	void loadROM(char*);
 };

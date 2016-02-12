@@ -10,7 +10,8 @@
 #define SCREEN_HEIGHT	32*SCALE
 #define SCREEN_BPP		32
 
-int translate_key(uint8_t key);
+int chip_to_sdl(uint8_t key);
+int sdl_to_chip(uint8_t key);
 void setPixel(uint32_t* pixels, int x, int y, int size, uint32_t color);
 
 int main(int argc, char* argv[]) {
@@ -56,13 +57,18 @@ int main(int argc, char* argv[]) {
 
 		uint8_t *sdl_keys = SDL_GetKeyState(NULL);
 
-		for (int i = 0; i < 16; i++)
-			emu.keys[i] = sdl_keys[translate_key(i)];
+		for (int i = 0; i < 16; i++) {
+			emu.keys[i] = sdl_keys[chip_to_sdl(i)];
+		}
 
 		while (SDL_PollEvent(&event)) {
 			switch (event.type) {
 			case SDL_QUIT:
 				quit = true;
+				break;
+			case SDL_KEYDOWN:
+				emu.wait_key = sdl_to_chip(event.key.keysym.sym);
+				fprintf(stderr, "Pressed key %x", emu.wait_key);
 				break;
 			}
 		}
@@ -82,28 +88,50 @@ void setPixel(uint32_t* pixels, int x, int y, int size, uint32_t color) {
 }
 
 enum {
-	Key_0, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_A, Key_B, Key_C, Key_D, Key_E, Key_F
+	Key_0 = 0, Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_A, Key_B, Key_C, Key_D, Key_E, Key_F
 };
 
-
-int translate_key(uint8_t key) {
+int chip_to_sdl(uint8_t key) {
         switch (key) {
-        case Key_1: return SDLK_1;
-        case Key_2: return SDLK_2;
-        case Key_3: return SDLK_3;
-        case Key_C: return SDLK_4;
-        case Key_4: return SDLK_q;
-        case Key_5: return SDLK_w;
-        case Key_6: return SDLK_e;
-        case Key_D: return SDLK_r;
-        case Key_7: return SDLK_a;
-        case Key_8: return SDLK_s;
-        case Key_9: return SDLK_d;
-        case Key_E: return SDLK_f;
-        case Key_A: return SDLK_z;
-        case Key_0: return SDLK_x;
-        case Key_B: return SDLK_c;
-        case Key_F: return SDLK_v;
+	        case Key_1: return SDLK_1;
+	        case Key_2: return SDLK_2;
+	        case Key_3: return SDLK_3;
+	        case Key_C: return SDLK_4;
+	        case Key_4: return SDLK_q;
+	        case Key_5: return SDLK_w;
+	        case Key_6: return SDLK_e;
+	        case Key_D: return SDLK_r;
+	        case Key_7: return SDLK_a;
+	        case Key_8: return SDLK_s;
+	        case Key_9: return SDLK_d;
+	        case Key_E: return SDLK_f;
+	        case Key_A: return SDLK_z;
+	        case Key_0: return SDLK_x;
+	        case Key_B: return SDLK_c;
+	        case Key_F: return SDLK_v;
+        }
+        return -1;
+}
+
+int sdl_to_chip(uint8_t key) {
+        switch (key) {
+			case SDLK_1: return Key_1;
+			case SDLK_2: return Key_2;
+			case SDLK_3: return Key_3;
+			case SDLK_4: return Key_C;
+			case SDLK_q: return Key_4;
+			case SDLK_w: return Key_5;
+			case SDLK_e: return Key_6;
+			case SDLK_r: return Key_D;
+			case SDLK_a: return Key_7;
+			case SDLK_s: return Key_8;
+			case SDLK_d: return Key_9;
+			case SDLK_f: return Key_E;
+			case SDLK_z: return Key_A;
+			case SDLK_x: return Key_0;
+			case SDLK_c: return Key_B;
+			case SDLK_v: return Key_F;
+
         }
         return -1;
 }
