@@ -4,11 +4,14 @@
 
 #include "chip8.h"
 
-#define SCREEN_WIDTH	64
-#define SCREEN_HEIGHT	32
+#define SCALE			7
+
+#define SCREEN_WIDTH	64*SCALE
+#define SCREEN_HEIGHT	32*SCALE
 #define SCREEN_BPP		32
 
 int translate_key(uint8_t key);
+void setPixel(uint32_t* pixels, int x, int y, int size, uint32_t color);
 
 int main(int argc, char* argv[]) {
 
@@ -17,7 +20,7 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	uint8_t keys[16];
 
-	chip8 emu(true);
+	chip8 emu(false);
 
 	if (argc == 2) {
 		emu.loadROM(argv[1]);
@@ -27,31 +30,22 @@ int main(int argc, char* argv[]) {
 	screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
 	uint32_t* pixels = (uint32_t*)screen->pixels;
 
-	/*
-	SDL_PixelFormat* fmt = screen->format;
-	SDL_LockSurface(screen);
-		for (int y = 0; y < 32; y++) {
-			for (int x = 0; x < 64; x++) {
-				pixels[(y*32) + x] = 0xFFFFFFFF;
-			}
-		}
-	SDL_UnlockSurface(screen);
-	SDL_Flip(screen);
-	*/
-
 	while (!quit) {
 
-		emu.step();
+		for (int i = 0; i < 50; i++) {
+			emu.step();
+		}
 
 		if (emu.updateScreen) {
 			SDL_LockSurface(screen);
 			for (int y = 0; y < 32; y++) {
 				//uint32_t *line = (uint32_t*)((char *)screen->pixels + y * screen->pitch);
 				for (int x = 0; x < 64; x++) {
-					if (emu.gfx[(y*64) + x])
-						pixels[(y*64) + x] = 0xFFFFFFFF;
-					else
-						pixels[(y*64) + x] = 0x00000000;
+					if (emu.gfx[(y*64) + x]) {
+						setPixel(pixels, x*SCALE, y*SCALE, SCALE, 0xFFFFFFFF);
+					} else {
+						setPixel(pixels, x*SCALE, y*SCALE, SCALE, 0x00000000);
+					}
 				}
 			}
 			SDL_UnlockSurface(screen);
@@ -77,6 +71,14 @@ int main(int argc, char* argv[]) {
 	SDL_Quit();
 
 	return 0;
+}
+
+void setPixel(uint32_t* pixels, int x, int y, int size, uint32_t color) {
+	for (int _y = 0; _y < size; _y++) {
+		for (int _x = 0; _x < size; _x++) {
+			pixels[((y+_y)*SCREEN_WIDTH) + x+_x] = color;
+		}
+	}
 }
 
 enum {

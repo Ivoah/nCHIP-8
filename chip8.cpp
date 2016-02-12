@@ -57,8 +57,8 @@ bool chip8::step() {
 					break;
 				case 0x00EE: //Returns from a subroutine
 					debug_print("pc before return: 0x%x\nsp: before return: 0x%x\n",pc,sp);
-					pc = stack[sp];
 					sp--;
+					pc = stack[sp];
 					debug_print("pc after return: 0x%x\nsp: after return: 0x%x\n",pc,sp);
 					break;
 			}
@@ -68,7 +68,7 @@ bool chip8::step() {
 			break;
 		case 0x2000: //Calls subroutine at NNN
 			debug_print("pc before call: 0x%x\nsp: before call: 0x%x\n",pc,sp);
-			stack[sp] = pc;
+			stack[sp] = pc + 2;
 			sp++;
 			pc = opcode & 0x0FFF;
 			debug_print("pc after call: 0x%x\nsp: after call: 0x%x\n",pc,sp);
