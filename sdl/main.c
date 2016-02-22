@@ -70,7 +70,6 @@ int main(int argc, char* argv[]) {
 				break;
 			case SDL_KEYDOWN:
 				emu.wait_key = sdl_to_chip(event.key.keysym.sym);
-				fprintf(stderr, "Pressed key %x", emu.wait_key);
 				break;
 			}
 		}

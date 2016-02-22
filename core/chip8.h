@@ -8,9 +8,6 @@
 #include <time.h>
 #include <stdbool.h>
 
-//#define debug_print(fmt, ...) \
-            if (debug) fprintf(stderr, fmt, ##__VA_ARGS__)
-
 #define debug_print(...) \
             if (emu->debug) fprintf(stderr, __VA_ARGS__)
 
