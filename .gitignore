@@ -1,3 +1,4 @@
 chip8
 *.o
 Chip-8 Pack
+.DS_Store

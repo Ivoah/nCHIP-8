@@ -1,6 +1,7 @@
 #include <SDL/SDL.h>
-#include <cstdint>
-#include <cstdio>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdbool.h>
 
 #include "chip8.h"
 
@@ -21,10 +22,11 @@ int main(int argc, char* argv[]) {
 	bool quit = false;
 	uint8_t keys[16];
 
-	chip8 emu(false);
+	struct chip8 emu;
+	chip8_init(&emu, false);
 
 	if (argc == 2) {
-		emu.loadROM(argv[1]);
+		chip8_loadROM(&emu, argv[1]);
 	}
 	SDL_Init(SDL_INIT_EVERYTHING);
 
@@ -34,7 +36,7 @@ int main(int argc, char* argv[]) {
 	while (!quit) {
 
 		for (int i = 0; i < 50; i++) {
-			emu.step();
+			chip8_step(&emu);
 		}
 
 		if (emu.updateScreen) {
