@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "chip8.h"
+#include "../core/chip8.h"
 
 #define SCALE			7
 

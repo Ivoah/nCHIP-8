@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS := $(shell sdl-config --cflags)
 LDFLAGS := $(shell sdl-config --libs)
 
-OBJECTS = main.o chip8.o
+OBJECTS = main.o ../core/chip8.o
 
 all: $(OUT)
 $(OUT): $(OBJECTS)
