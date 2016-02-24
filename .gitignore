@@ -5,3 +5,4 @@ Chip-8 Pack
 *.gba
 *.elf
 *.sav
+gba/build
