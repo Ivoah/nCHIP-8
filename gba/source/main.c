@@ -7,30 +7,31 @@
 #include "../../core/chip8.h"
 
 #define SCALE		3
-#define X_OFFSET	24
-#define Y_OFFSET	32
+#define X_OFFSET	(240 - 64*SCALE)/2 //24
+#define Y_OFFSET	(160 - 32*SCALE)/2 //32
 
 void setPixel(int x, int y, int size, u16 color);
 //extern uint8_t IBMLogo_ch8[];
 //extern int IBMLogo_ch8_size;
 //extern uint8_t RushHourHap2006_ch8[];
 //extern int RushHourHap2006_ch8_size;
-extern uint8_t* Invaders;
+extern uint8_t Invaders[];
 extern int Invaders_size;
-const uint8_t keymap[] = {5, //KEY_A
-						  5, //KEY_B
-						  0, //KEY_SELECT
-						  0, //KEY_START
-						  6, //KEY_RIGHT
-						  4, //KEY_LEFT
-						  5, //KEY_UP
-						  0, //KEY_DOWN
-						  6, //KEY_R
-						  4, //KEY_L
+extern void* __rom_end__;
+uint8_t keymap[] = {5, //KEY_A
+					5, //KEY_B
+					0, //KEY_SELECT
+					5, //KEY_START
+					6, //KEY_RIGHT
+					4, //KEY_LEFT
+					5, //KEY_UP
+					0, //KEY_DOWN
+					6, //KEY_R
+					4, //KEY_L
 };
 
-typedef struct DMA_REC
-{
+
+typedef struct DMA_REC {
     const void *src;
     void *dst;
     u32 cnt;
@@ -55,6 +56,10 @@ int main(void) {
 	struct chip8 emu;
 	chip8_init(&emu, false);
 	memcpy((emu.mem + 0x200), &Invaders, Invaders_size);
+
+	//for (int i = 0; i < 10; i++) {
+		//keymap[i] = ((uint8_t*)__rom_end__)[i*2] - 48;
+	//}
 
 	// the vblank interrupt must be enabled for VBlankIntrWait() to work
 	// since the default dispatcher handles the bios flags no vblank handler
@@ -84,8 +89,11 @@ int main(void) {
 
 		scanKeys();
 		u16 keys = keysHeld();
+		memset(emu.keys, 0, 0xF);
 		for (int i = 0; i <= 9; i++) {
-			emu.keys[keymap[i]] = keys & (1<<i);
+			if (keys & (1<<i)) {
+				emu.keys[keymap[i]] = 1;
+			}
 		}
 
 		VBlankIntrWait();
