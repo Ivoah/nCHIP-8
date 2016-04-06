@@ -20,7 +20,7 @@ TARGET		:=	chip8
 BUILD		:=	build
 SOURCES		:=	source ../core
 DATA		:=
-INCLUDES	:=
+INCLUDES	:= ../core
 
 #---------------------------------------------------------------------------------
 # options for code generation

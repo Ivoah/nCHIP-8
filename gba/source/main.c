@@ -4,32 +4,16 @@
 #include <gba_input.h>
 #include <gba_dma.h>
 
-#include "../../core/chip8.h"
+#include "chip8.h"
 
 #define SCALE		3
 #define X_OFFSET	(240 - 64*SCALE)/2 //24
 #define Y_OFFSET	(160 - 32*SCALE)/2 //32
 
 void setPixel(int x, int y, int size, u16 color);
-//extern uint8_t IBMLogo_ch8[];
-//extern int IBMLogo_ch8_size;
-//extern uint8_t RushHourHap2006_ch8[];
-//extern int RushHourHap2006_ch8_size;
-extern uint8_t Invaders[];
-extern int Invaders_size;
-extern void* __rom_end__;
-uint8_t keymap[] = {5, //KEY_A
-					5, //KEY_B
-					0, //KEY_SELECT
-					5, //KEY_START
-					6, //KEY_RIGHT
-					4, //KEY_LEFT
-					5, //KEY_UP
-					0, //KEY_DOWN
-					6, //KEY_R
-					4, //KEY_L
-};
-
+extern uint8_t ROM[];
+extern uint8_t keymap[];
+//const uint8_t keymap[] = {5,5,0,5,6,4,5,0,6,4};
 
 typedef struct DMA_REC {
     const void *src;
@@ -55,7 +39,7 @@ int main(void) {
 
 	struct chip8 emu;
 	chip8_init(&emu, false);
-	memcpy((emu.mem + 0x200), &Invaders, Invaders_size);
+	memcpy((emu.mem + 0x200), &ROM, 0xE00);
 
 	//for (int i = 0; i < 10; i++) {
 		//keymap[i] = ((uint8_t*)__rom_end__)[i*2] - 48;
